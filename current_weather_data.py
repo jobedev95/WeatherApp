@@ -1,8 +1,8 @@
 from typing import Any
 
 
-class WeatherData:
-    """Hanterar och printar dagens väderprognosdata i lämpligt format."""
+class CurrentWeatherData:
+    """Hanterar och printar nuvarande väderprognosdata i lämpligt format."""
 
     def __init__(self, weather_data: dict[Any, Any]) -> None:
         self.city: str = weather_data["name"]  # Sparar stadsnamn

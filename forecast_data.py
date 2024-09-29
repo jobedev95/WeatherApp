@@ -26,63 +26,12 @@ class ForecastData:
                 }
             )
 
-    def prepare_forecast(self) -> None:
-        """Förbereder väderprognosdata för fem dagar genom att organisera och dela upp
-        prognosen i fem separata delar efter datum. Skapar en lista med fem dictionaries där varje
-        dictionary innehåller väderprognoserna för de olika tidpunkterna från varje dag."""
-
-        # Lista för att spara alla prognos-strängar från varje iteration
-        forecast_lines: list[str] = []
-
-        # Lista som ska samla in alla fem dagars prognoser
-        full_day_forecasts: list[dict[str, str | list[str]]] = []
-
-        # Lista för att spara alla fem väderkoder från varje prognos
-        weather_ids: list[int] = []
-
-        title: str = ""
-        subheader: str = ""
-
-        # För varje prognos i prognosdatan
-        for i, item in enumerate(self.forecast_data):
-            # Spara datum och tid. (Konverterar datetimeobjektet till en vanliga datum- och tidsträngar)
-            date: str = item["date"].strftime("%Y-%m-%d")
-            time: str = item["date"].strftime("%H:%M")
-
-            # Om det är en ny dag i iterationen eller om det är den första iterationen ska en
-            # rubrik med datumet sparas och weather_lines (listan med prognossträngar) samt weather_ids återställas
-            if time == "02:00" or i == 0:
-                weather_ids = []
-                forecast_lines = []
-                title = f"{date}"
-
-            # Lägg till väderkoden för varje iteration i listan
-            weather_ids.append(item["weather_id"])
-
-            # Skapar en sträng från den insamlade prognosdatan från varje iteration och sparar strängen i en lista
-            # Exempel på hur varje sträng kommer att se ut: "03:00: 23 °C Klart väder"
-            forecast_lines.append(f"{time}: " + f'{item['main_temp']} °C, {item["weather_description"].capitalize()}')
-
-            # När all data från en hel dag har samlats in och organiserats körs detta kodblock
-            if time == "23:00":
-                # Ställer in värdet underrubriken
-                subheader = self.city
-
-                # Hämtar in den mest förekommande väderkoden för dagen
-                avg_weather_id: int = self.get_average_weather_id(weather_ids)
-
-                # Hämtar väderkodens motsvarande väderikon (emoji) och sparar den i header
-                header: str = f"{self.get_weather_icon(avg_weather_id)}"
-
-                # Lägger till dagsprognosen i prognoslistan
-                full_day_forecasts.append({"header": header, "title": title, "subheader": subheader, "time_forecasts": forecast_lines})
-
-        self.print_full_day_forecasts(full_day_forecasts)
-
-    def print_full_day_forecasts(self, full_day_forecast: list[dict[str, str | list[str]]]) -> None:
+    def print_full_day_forecasts(self) -> None:
         """Printar ut femdagarsprognosen i ett särskilt format där den första dagen visas separat,
         och de resterande fyra dagarna printas ut i par sida vid sida. Varje prognos omges av sin egen linjeram."""
 
+        # Anropar en funktion som förbereder den inhämtade datan genom att organisera alla tidsprognoser
+        full_day_forecast: list = self._prepare_forecast_data()
         border_width = 45
 
         #                                       PRINTAR DAGENS PROGNOS (Index 0)
@@ -137,6 +86,61 @@ class ForecastData:
             # Printar nedre kanterna med hörn
             print("└" + "".center(border_width, "─") + "┘" + "└" + "".center(border_width, "─") + "┘")
 
+
+    def _prepare_forecast_data(self) -> list[dict[str, str | list[str]]]:
+        """Förbereder väderprognosdata för fem dagar genom att organisera och dela upp
+        prognosen i fem separata delar efter datum. Skapar och returnerar en lista med fem dictionaries där varje
+        dictionary innehåller väderprognoserna för de olika tidpunkterna från varje dag."""
+
+        # Lista för att spara alla prognos-strängar från varje iteration
+        forecast_lines: list[str] = []
+
+        # Lista som ska samla in alla fem dagars prognoser
+        full_day_forecasts: list[dict[str, str | list[str]]] = []
+
+        # Lista för att spara alla fem väderkoder från varje prognos
+        weather_ids: list[int] = []
+
+        title: str = ""
+        subheader: str = ""
+
+        # För varje prognos i prognosdatan
+        for i, item in enumerate(self.forecast_data):
+            # Spara datum och tid. (Konverterar datetimeobjektet till en vanliga datum- och tidsträngar)
+            date: str = item["date"].strftime("%Y-%m-%d")
+            time: str = item["date"].strftime("%H:%M")
+
+            # Om det är en ny dag i iterationen eller om det är den första iterationen ska en
+            # rubrik med datumet sparas och weather_lines (listan med prognossträngar) samt weather_ids återställas
+            if time == "02:00" or i == 0:
+                weather_ids = []
+                forecast_lines = []
+                title = f"{date}"
+
+            # Lägg till väderkoden för varje iteration i listan
+            weather_ids.append(item["weather_id"])
+
+            # Skapar en sträng från den insamlade prognosdatan från varje iteration och sparar strängen i en lista
+            # Exempel på hur varje sträng kommer att se ut: "03:00: 23 °C Klart väder"
+            forecast_lines.append(f"{time}: " + f'{item['main_temp']} °C, {item["weather_description"].capitalize()}')
+
+            # När all data från en hel dag har samlats in och organiserats körs detta kodblock
+            if time == "23:00":
+                # Ställer in värdet underrubriken
+                subheader = self.city
+
+                # Hämtar in den mest förekommande väderkoden för dagen
+                avg_weather_id: int = self.get_average_weather_id(weather_ids)
+
+                # Hämtar väderkodens motsvarande väderikon (emoji) och sparar den i header
+                header: str = f"{self.get_weather_icon(avg_weather_id)}"
+
+                # Lägger till dagsprognosen i prognoslistan
+                full_day_forecasts.append({"header": header, "title": title, "subheader": subheader, "time_forecasts": forecast_lines})
+
+        return full_day_forecasts
+
+    
     def get_average_weather_id(self, weather_icons: list[int]) -> int:
         """Räknar ut vilken väderkod som förekommer flest antal gånger i listan.
         Returnerar det mest förekommande värdet."""
