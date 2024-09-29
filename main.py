@@ -27,9 +27,6 @@ def main() -> None:
     if forecast_type == "weather?":
         weather_data = WeatherData(data)
         weather_data.print_weather()
-        # whm = WeatherHistoryManager(WORLDWEATHERONLINE_API_KEY)
-        # history_data = HistoryData(whm.get_history_data(weather_data.city))
-        # history_data.print_average_temp()
 
     # Om användaren ska ha en 5-dagars prognos
     else:
