@@ -35,7 +35,7 @@ def main() -> None:
     # Om användaren ska ha en 5-dagars prognos körs kodblocket nedan
     else:
         forecast = ForecastData(data)  # Skapar ett objekt för fem dagars väderprognos
-        forecast.print_full_day_forecasts()  # Printar ut femdagars-prognosen
+        forecast.print_full_day_forecasts()
 
 
 if __name__ == "__main__":
