@@ -18,19 +18,10 @@ class WeatherManager:
         Returnerar den relevanta url-strängen för den angivna prognostypen,
         antingen 'weather?' eller 'forecast?'"""
 
-        menu_choices: list[str] = ["Nuvarande Väder", "5 Dagars Prognos"]
+        menu_choices: list[str] = ["Nuvarande Väder", "5 Dagars Prognos", "Historisk Väderinformation"]
         user_choice: str = py.inputMenu(prompt="\nAnge typ av väderprognos:\n", choices=menu_choices, numbered=True)
-        type_of_forecast: str = ""
 
-        match user_choice:
-            case "Nuvarande Väder":
-                type_of_forecast = "weather?"
-            case "5 Dagars Prognos":
-                type_of_forecast = "forecast?"
-            case _:
-                pass
-
-        return type_of_forecast
+        return user_choice
 
     def get_search_choice(self) -> str:
         """Frågar användaren om vilken typ av sökning som ska göras.
@@ -39,26 +30,26 @@ class WeatherManager:
 
         menu_choices: list[str] = ["Stad", "Postnummer", "Nuvarande Plats"]
         user_choice: str = py.inputMenu(prompt="\nAnge typ av sökning:\n", choices=menu_choices, numbered=True)
-        type_of_search: str = ""
 
+        type_of_search: str = ""
         match user_choice:
             case "Stad":
                 city_name: str = py.inputStr(prompt="\nAnge stad: ")
-                type_of_search = f"&q={city_name}"
+                type_of_search = f"&q={city_name}"  # Skapar parametersträngen som ska användas i API URL-länken
             case "Postnummer":
-                location: Any = self.get_location()
-                country_code: str = location.country
-                zip_code: str = self.get_zip_code()
-                type_of_search = f"&zip={zip_code},{country_code}"
+                location: Any = self.get_location()  # Hämtar platsinformation baserat på användarens IP-adress
+                country_code: str = location.country  # Tar fram landskoden (ex. "SE" för Sverige)
+                zip_code: str = self.get_zip_code()  # Hämtar in postnummer från användaren i formatet "xxx xx"
+                type_of_search = f"&zip={zip_code},{country_code}"  # Skapar parametersträngen som ska användas i API URL-länken
             case "Nuvarande Plats":
                 try:
-                    location = self.get_location()
+                    location = self.get_location()  # Hämtar platsinformation baserat på användarens IP-adress
                 except Exception:
                     print("Kunde inte hämta platsdata.")
                     sys.exit()
                 if location is not None:
                     lat, lon = location.latlng
-                    type_of_search = f"&lat={lat}&lon={lon}"
+                    type_of_search = f"&lat={lat}&lon={lon}"  # Skapar parametersträngen som ska användas i API URL-länken
             case _:
                 pass
 
@@ -68,11 +59,11 @@ class WeatherManager:
         """Hämtar in postnummer från användaren. Returnerar det i formatet "xxx xx"."""
         while True:
             zip_code: int = py.inputInt(prompt="\nAnge postnummer: ")
-            zip_code_str: str = str(zip_code)
-            if len(zip_code_str) == 5:
-                zip_code_str = f"{zip_code_str[:3]} {zip_code_str[3:]}"
+            zip_code_string: str = str(zip_code)
+            if len(zip_code_string) == 5:
+                zip_code_string = f"{zip_code_string[:3]} {zip_code_string[3:]}"
                 break
-        return zip_code_str
+        return zip_code_string
 
     def get_location(self) -> Any:
         """Hämtar platsinformation genom användaren IP-adress. Returnerar platsinformationen eller None vid fel."""
@@ -83,9 +74,14 @@ class WeatherManager:
             print(f"Kunde inte hämta platsinformation. Felmeddelande: {e}")
             return None
 
-    def attempt_search(self, forecast_type: str) -> dict[Any, Any]:
+    def fetch_data(self, chosen_forecast: str) -> dict[Any, Any]:
         """Försöker hämta in väderdata från OpenWeatherMap.
         Returnerar JSON-encodad väderdata vid lyckad inhämtning."""
+
+        if chosen_forecast == "Nuvarande Väder":
+            forecast_type = "weather?"
+        elif chosen_forecast == "5 Dagars Prognos":
+            forecast_type = "forecast?"
 
         attempt_search: bool = True
         while attempt_search:
@@ -99,6 +95,5 @@ class WeatherManager:
                 print(
                     f"\nNågot gick fel med sökningen. Kontrollera att du stavade rätt och att du har en internetanslutning!\nFelmeddelande:\n{e}"
                 )
-                if py.inputYesNo("\nVill du försöka igen? (y/n): ") == "no":
-                    attempt_search = False
+                return e
         raise ValueError("\nLyckades inte hämta väderdata!")
