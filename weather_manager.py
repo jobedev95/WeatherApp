@@ -10,8 +10,9 @@ class WeatherManager:
     """Hanterar inhämtning av extern indata såsom användarens input för typ av prognos, stadsnamn eller postnummer, och IP-adressens koordinater.
     Dessa används sedan för att forma den URL-sträng som behövs för inhämtning av väderprognoserna, antingen nuvarande väder eller en 5-dagars prognos."""
 
-    def __init__(self, openweathermap_api_key: str) -> None:
+    def __init__(self, openweathermap_api_key: str, unit: str) -> None:
         self.API_KEY: str = openweathermap_api_key
+        self.unit: str = unit
 
     def get_forecast_choice(self) -> str:
         """Frågar användaren om vilken typ av väderprognos som ska hämtas.
@@ -35,21 +36,22 @@ class WeatherManager:
         match user_choice:
             case "Stad":
                 city_name: str = py.inputStr(prompt="\nAnge stad: ")
-                type_of_search = f"&q={city_name}"  # Skapar parametersträngen som ska användas i API URL-länken
+                type_of_search: str = f"&q={city_name}"  # Skapar parametersträngen som ska användas i API URL-länken
             case "Postnummer":
-                location: Any = self.get_location()  # Hämtar platsinformation baserat på användarens IP-adress
+                try:
+                    location: Any = self.get_location()  # Hämtar platsinformation baserat på användarens IP-adress
+                except:
+                    print("Kunde inte hämta platsdata.")
                 country_code: str = location.country  # Tar fram landskoden (ex. "SE" för Sverige)
                 zip_code: str = self.get_zip_code()  # Hämtar in postnummer från användaren i formatet "xxx xx"
                 type_of_search = f"&zip={zip_code},{country_code}"  # Skapar parametersträngen som ska användas i API URL-länken
             case "Nuvarande Plats":
                 try:
                     location = self.get_location()  # Hämtar platsinformation baserat på användarens IP-adress
-                except Exception:
-                    print("Kunde inte hämta platsdata.")
-                    sys.exit()
-                if location is not None:
                     lat, lon = location.latlng
                     type_of_search = f"&lat={lat}&lon={lon}"  # Skapar parametersträngen som ska användas i API URL-länken
+                except Exception:
+                    print("Kunde inte hämta platsdata.")
             case _:
                 pass
 
@@ -74,7 +76,7 @@ class WeatherManager:
             print(f"Kunde inte hämta platsinformation. Felmeddelande: {e}")
             return None
 
-    def fetch_data(self, chosen_forecast: str) -> dict[Any, Any]:
+    def fetch_data(self, chosen_forecast: str) -> Any:
         """Försöker hämta in väderdata från OpenWeatherMap.
         Returnerar JSON-encodad väderdata vid lyckad inhämtning."""
 
@@ -87,13 +89,16 @@ class WeatherManager:
         while attempt_search:
             try:
                 search_type: str = self.get_search_choice()
-                url: str = f"https://api.openweathermap.org/data/2.5/{forecast_type}appid={self.API_KEY}&units=metric&lang=sv{search_type}"
-                response: Response = requests.get(url)
+                url: str = (
+                    f"https://api.openweathermap.org/data/2.5/{forecast_type}appid={self.API_KEY}&units={self.unit}&lang=sv{search_type}"
+                )
+                response: Response = requests.get(url)  # Hämtar API datan och tilldelar den till en variabel
                 response.raise_for_status()
-                return response.json()
+                return response.json()  # Formaterar om hämtningen till en json fil
             except Exception as e:
                 print(
-                    f"\nNågot gick fel med sökningen. Kontrollera att du stavade rätt och att du har en internetanslutning!\nFelmeddelande:\n{e}"
+                    f"\nNågot gick fel med sökningen. Kontrollera att du stavade rätt och att du har en internetanslutning!\nFelmeddelande:\n{e}\n"
                 )
-                return e
-        raise ValueError("\nLyckades inte hämta väderdata!")
+                if py.inputYesNo("\nVill du försöka igen? (y/n): ") == "no":
+                    print("Tack för att du använder vår väderapp. Hejdå!")
+                    attempt_search = False

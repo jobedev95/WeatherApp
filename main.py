@@ -1,12 +1,10 @@
 from typing import Any
-import sys
-from forecast_data import ForecastData
+from five_day_forecast_data import FiveDayForecastData
 from current_weather_data import CurrentWeatherData
-import logging
 from weather_manager import WeatherManager
 from historical_data import HistoricalData, HistoricalManager
-
-# from historical_data import HistoricalData.
+from unit_config import UnitConfig
+import logging
 import logo
 
 # Ställer in konfigurationen för loggning. Den skapar en fil med namnet "my_log.log" som skrivs över varje gång programmet körs.
@@ -21,8 +19,11 @@ WORLDWEATHERONLINE_API_KEY: str = ""  # API nyckel klistras in här.
 def main() -> None:
     logo.print_logo()  # Printar programloggan.
 
+    unit_config: UnitConfig = UnitConfig()
+    unit: str = unit_config.get_unit()
+
     # Skapar en ny instans av WeatherManager, som hanterar programlogiken för inhämtning av extern indata.
-    weather: WeatherManager = WeatherManager(OPENWEATHERMAP_API_KEY)
+    weather: WeatherManager = WeatherManager(OPENWEATHERMAP_API_KEY, unit)
     forecast_type: str = weather.get_forecast_choice()  # Hämtar in användarens val för typ av väderprognos.
 
     # Om användaren har valt att få historisk väderinformation körs koden nedan
@@ -31,7 +32,7 @@ def main() -> None:
             historical_weather = HistoricalManager(WORLDWEATHERONLINE_API_KEY)
             try:
                 data: Any = historical_weather.get_historical_data()
-                historical_data: HistoricalData = HistoricalData(data)
+                historical_data: HistoricalData = HistoricalData(data, unit)
                 break
             except Exception:
                 print(
@@ -41,17 +42,18 @@ def main() -> None:
 
     # Om användaren har valt att få nuvarande väder eller en femdagarsväderprognos körs koden nedan
     else:
-        # Försöker hämta in väderdatan genom OpenWeatherMap API.
         try:
+            # Försöker hämta in väderdatan genom OpenWeatherMap API.
             data: dict = weather.fetch_data(forecast_type)
+
             # Om användaren enbart ska ha nuvarande väder körs kodblocket nedan.
             if forecast_type == "Nuvarande Väder":
-                weather_data: CurrentWeatherData = CurrentWeatherData(data)  # Skapar ett objekt för nuvarande väderprognos.
+                weather_data: CurrentWeatherData = CurrentWeatherData(data, unit)  # Skapar ett objekt för nuvarande väderprognos.
                 weather_data.print_weather()  # Printar ut nuvarande väder.
 
             # Om användaren ska ha en 5-dagars prognos körs kodblocket nedan.
             else:
-                forecast: ForecastData = ForecastData(data)  # Skapar ett objekt för fem dagars väderprognos.
+                forecast: FiveDayForecastData = FiveDayForecastData(data, unit)  # Skapar ett objekt för fem dagars väderprognos.
                 forecast.print_forecast_data(width=40)  # Printar fem dagars prognosen.
         except Exception:
             # Printar ett felmeddelande om inhämtningen gick fel.
