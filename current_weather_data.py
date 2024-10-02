@@ -12,33 +12,26 @@ class CurrentWeatherData:
         self.weather_description: str = weather_data["weather"][0]["description"]  # Sparar väderbeskrivning
         self.weather_id: int = weather_data["weather"][0]["id"]  # Sparar väder-id
 
-    def print_weather(self) -> None:
+    def print_weather(self, width: int) -> None:
         """Printar prognosdatan med en omgivande linjeram."""
-        weather_icon, title, lines = self._prepare_for_print()
-
-        border_width: int = 45  # Ange bredden på linjeramen
-        print(weather_icon.center(border_width))  # Printa väderikonen
-        box_print_title(title, border_width)  # Printa rubriken med en överkant
-
-        # Loop som printar ut alla strängar i variabeln lines med sidolinjer
-        for line in lines:
-            box_print_body(line, border_width)
-        box_print_footer(border_width)  # Printa nedre kant
-
-    def _prepare_for_print(self) -> tuple[str, str, list[str]]:
-        """Förbereder väderdatan för att printas genom att formatera strängar i ett visst format."""
         weather_icon: str = f"{self.get_weather_icon()}"  # Hämtar väderikonen som motsvarar väderid-numret
-        title: str = self.city  # Sparar stadsnamnet
+        print(weather_icon.center(width))  # Printa väderikonen
 
-        # Skapar de olika meningarna som ska printas ut och lägger dem i en lista
-        lines: list[str] = []
-        lines.append(f"Temperatur: {self.temperature} °C, {self.weather_description.capitalize()}")
-        lines.append(f"Känns som: {self.feels_like} °C")
-        return (weather_icon, title, lines)  # Returnerar alla tre värden i en tuple
+        title: str = self.city  # Sparar stadsnamnet
+        box_print_title(title, width)  # Printa rubriken med en överkant
+
+        # Printar f-strängarna med sidolinjer
+        line1: str = f"Temperatur: {self.temperature} °C, {self.weather_description.capitalize()}"
+        line2: str = f"Känns som: {self.feels_like} °C"
+        box_print_body(line1, width)  # Printar line1
+        box_print_body(line2, width)  # Printar line2
+        box_print_footer(width)  # Printa nedre kant
 
     def get_weather_icon(self) -> str:
         """Returnerar en väderikon (emoji) som motsvarar prognosdatans väderkod."""
+
         symbol: str = ""
+        # Match-case som söker efter en matchning med den första siffran i väder-id:t
         match str(self.weather_id)[0]:
             case "2":
                 # Åska

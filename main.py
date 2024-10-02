@@ -1,18 +1,19 @@
-from typing import Any
-from five_day_forecast_data import FiveDayForecastData
-from current_weather_data import CurrentWeatherData
 from weather_manager import WeatherManager
 from historical_data import HistoricalData, HistoricalManager
-import logging
+from current_weather_data import CurrentWeatherData
+from five_day_forecast_data import FiveDayForecastData
 import logo
+import logging
+from typing import Any
+
 
 # Ställer in konfigurationen för loggning. Den skapar en fil med namnet "my_log.log" som skrivs över varje gång programmet körs.
 # Det angivna formatet gör att varje logg har ett datum, namn på modulen som felet härstammar ifrån, loggnivå samt felmeddelandet.
 logging.basicConfig(filename="my_log.log", filemode="w", format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 #! Lägg till OpenWeatherMap och WorldWeatherOnline API Nycklarna här
-OPENWEATHERMAP_API_KEY: str = "8aabd0fbe1e331f7320d6e9fe397eb00"
-WORLDWEATHERONLINE_API_KEY: str = "847e933e3b9847cc96910938242809"  # API nyckel klistras in här.
+OPENWEATHERMAP_API_KEY: str = ""
+WORLDWEATHERONLINE_API_KEY: str = ""
 
 
 def main() -> None:
@@ -25,15 +26,21 @@ def main() -> None:
     # Om användaren har valt att få historisk väderinformation körs koden nedan
     if forecast_type == "Historisk Väderinformation":
         while True:
-            historical_weather = HistoricalManager(WORLDWEATHERONLINE_API_KEY)
+            # Skapar en instans av historical manager
+            history: HistoricalManager = HistoricalManager(WORLDWEATHERONLINE_API_KEY)
             try:
-                data: Any = historical_weather.get_historical_data()
+                # Hämtar in historisk väderdata och sparar det i variabeln 'data'
+                data: Any = history.get_historical_data()
+
+                # Skapar ett HistoricalData-objekt
                 historical_data: HistoricalData = HistoricalData(data)
                 break
-            except Exception:
+            except Exception as e:
                 print(
-                    f"\nKunde inte hämta historisk väderinformation. Kontrollera att stavningen är korrekt och att datumet är rätt formaterat!\n"
+                    f"\nKunde inte hämta historisk väderinformation. Kontrollera att stavningen är korrekt och att datumet är rätt formaterat! Felmeddelande: {e}\n"
                 )
+
+        # Anropar historical_data objektets metod för att printa ut den historiska datan
         historical_data.print_historical_data()
 
     # Om användaren har valt att få nuvarande väder eller en femdagarsväderprognos körs koden nedan
@@ -42,15 +49,15 @@ def main() -> None:
             # Försöker hämta in väderdatan genom OpenWeatherMap API.
             data: dict = weather.fetch_data(forecast_type)
 
-            # Om användaren enbart ska ha nuvarande väder körs kodblocket nedan.
+            # Om användaren ska ha nuvarande väder körs kodblocket nedan.
             if forecast_type == "Nuvarande Väder":
                 weather_data: CurrentWeatherData = CurrentWeatherData(data)  # Skapar ett objekt för nuvarande väderprognos.
-                weather_data.print_weather()  # Printar ut nuvarande väder.
+                weather_data.print_weather(width=40)  # Printar ut nuvarande väder.
 
             # Om användaren ska ha en 5-dagars prognos körs kodblocket nedan.
             else:
-                forecast: FiveDayForecastData = FiveDayForecastData(data)  # Skapar ett objekt för fem dagars väderprognos.
-                forecast.print_forecast_data(width=40)  # Printar fem dagars prognosen.
+                five_day_forecast: FiveDayForecastData = FiveDayForecastData(data)  # Skapar ett objekt för fem dagars väderprognos.
+                five_day_forecast.print_forecast_data(width=40)  # Printar fem dagars prognosen.
         except Exception:
             # Printar ett felmeddelande om inhämtningen gick fel.
             print("\nKunde inte hämta väderinformation. Kontrollera att stavningen är korrekt eller att postnumret är rätt formaterat!\n")
