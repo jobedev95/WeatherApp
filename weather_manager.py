@@ -10,9 +10,8 @@ class WeatherManager:
     """Hanterar inhämtning av extern indata såsom användarens input för typ av prognos, stadsnamn eller postnummer, och IP-adressens koordinater.
     Dessa används sedan för att forma den URL-sträng som behövs för inhämtning av väderprognoserna, antingen nuvarande väder eller en 5-dagars prognos."""
 
-    def __init__(self, openweathermap_api_key: str, unit: str) -> None:
+    def __init__(self, openweathermap_api_key: str) -> None:
         self.API_KEY: str = openweathermap_api_key
-        self.unit: str = unit
 
     def get_forecast_choice(self) -> str:
         """Frågar användaren om vilken typ av väderprognos som ska hämtas.
@@ -90,7 +89,7 @@ class WeatherManager:
             try:
                 search_type: str = self.get_search_choice()
                 url: str = (
-                    f"https://api.openweathermap.org/data/2.5/{forecast_type}appid={self.API_KEY}&units={self.unit}&lang=sv{search_type}"
+                    f"https://api.openweathermap.org/data/2.5/{forecast_type}appid={self.API_KEY}&units=metric&lang=sv{search_type}"
                 )
                 response: Response = requests.get(url)  # Hämtar API datan och tilldelar den till en variabel
                 response.raise_for_status()

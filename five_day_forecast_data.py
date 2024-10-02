@@ -6,13 +6,9 @@ from box_print import box_print_title, box_print_body, box_print_footer
 class FiveDayForecastData:
     """Hanterar och printar fem dagars väderprognosdata i lämpligt format."""
 
-    def __init__(self, weather_data: dict, unit: str) -> None:
+    def __init__(self, weather_data: dict) -> None:
         self.city: str = weather_data["city"]["name"]  # Sparar stadsnamn
         self.forecast_data: list[Any] = weather_data["list"]  # Sparar en lista med dictionaries
-        if unit == "metric":
-            self.unit: str = "C"
-        else:
-            self.unit = "F"
 
     def print_forecast_data(self, width: int) -> None:
         """Printar ut all prognosdata för dom kommande 120 timmarna tillsammans.
@@ -31,10 +27,10 @@ class FiveDayForecastData:
                 box_print_title(date, width)  # Printar datumet
 
             # Skapar en sträng för varje tidsprognos. Exempel på hur strängen kan komma att se ut: '14:00: 23 °C, Klart väder'
-            new_line: str = f"{time}: {item['main']['temp']} °{self.unit}, {item['weather'][0]['description'].capitalize()}"
+            new_line: str = f"{time}: {item['main']['temp']} °C, {item['weather'][0]['description'].capitalize()}"
             box_print_body(new_line, width)
 
-            # Om tiden i iterationen är 23:00 eller om det är den sista iterationen ska en footer printas
+            # Om tiden i iterationen är 21:00 eller om det är den sista iterationen ska en footer printas
             if time == "21:00" or index == len(self.forecast_data) - 1:
                 if seen_dates:
                     box_print_footer(width)

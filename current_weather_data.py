@@ -5,17 +5,12 @@ from box_print import box_print_title, box_print_body, box_print_footer
 class CurrentWeatherData:
     """Hanterar och printar nuvarande väderprognosdata i lämpligt format."""
 
-    def __init__(self, weather_data: dict, unit: str) -> None:
+    def __init__(self, weather_data: dict) -> None:
         self.city: str = weather_data["name"]  # Sparar stadsnamn
         self.temperature: float = weather_data["main"]["temp"]  # Sparar temperatur
         self.feels_like: float = weather_data["main"]["feels_like"]  # Sparar känns-som temperatur
         self.weather_description: str = weather_data["weather"][0]["description"]  # Sparar väderbeskrivning
         self.weather_id: int = weather_data["weather"][0]["id"]  # Sparar väder-id
-        if unit == "metric":
-            print(unit)
-            self.unit: str = "C"
-        else:
-            self.unit = "F"
 
     def print_weather(self) -> None:
         """Printar prognosdatan med en omgivande linjeram."""
@@ -37,8 +32,8 @@ class CurrentWeatherData:
 
         # Skapar de olika meningarna som ska printas ut och lägger dem i en lista
         lines: list[str] = []
-        lines.append(f"Temperatur: {self.temperature} °{self.unit}, {self.weather_description.capitalize()}")
-        lines.append(f"Känns som: {self.feels_like} °{self.unit}")
+        lines.append(f"Temperatur: {self.temperature} °C, {self.weather_description.capitalize()}")
+        lines.append(f"Känns som: {self.feels_like} °C")
         return (weather_icon, title, lines)  # Returnerar alla tre värden i en tuple
 
     def get_weather_icon(self) -> str:
